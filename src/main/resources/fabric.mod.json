@@ -3,8 +3,11 @@
   "id": "legitiratings",
   "version": "${version}",
   "name": "LegitiRatings",
-  "description": "",
-  "authors": [],
+  "description": "Rate and review Legitimoose worlds in-game!",
+  "authors": [
+    "Omri",
+    "olaf_294"
+  ],
   "contact": {},
   "license": "MIT",
   "icon": "assets/legitiratings/icon.png",
