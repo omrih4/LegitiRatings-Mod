@@ -46,7 +46,7 @@ public class RateScreen extends Screen {
             try {
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:3000/review/" + uuid))
+                        .uri(URI.create("https://ratings.legiti.dev/review/" + uuid))
                         .header("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(String.format("{\"rating\":%s,\"description\":\"%s\",\"reviewer\":\"%s\"}", rating, description.getValue(), Minecraft.getInstance().getGameProfile().name())))
                         .build();
