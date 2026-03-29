@@ -1,5 +1,6 @@
 package me.omrih.legitiratings.client;
 
+import com.google.gson.JsonParser;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -27,6 +28,8 @@ public class RateScreen extends Screen {
 
     @Override
     protected void init() {
+        HttpClient client = HttpClient.newHttpClient();
+
         AbstractSliderButton slider = new AbstractSliderButton((this.width / 2) - 60, 40, 120, 20, Component.literal("Rating"), 0) {
             @Override
             protected void updateMessage() {
@@ -39,22 +42,40 @@ public class RateScreen extends Screen {
             }
         };
 
-        EditBox description = new EditBox(this.font, (this.width / 2) - 180, 80, 360, 20, CommonComponents.EMPTY);
-        description.setMaxLength(200);
+        HttpResponse<String> getResponse = null;
+        HttpRequest get = HttpRequest.newBuilder()
+                .uri(URI.create("https://ratings.legiti.dev/review/" + uuid))
+                .header("Content-Type", "application/json")
+                .GET()
+                .build();
+        try {
+            getResponse = client.send(get, HttpResponse.BodyHandlers.ofString());
+        } catch (Exception e) {
+            LegitiratingsClient.LOGGER.error("Request failed", e);
+        }
+        String description;
+        if (getResponse == null || getResponse.statusCode() == 400) {
+            description = "";
+        } else {
+            description = JsonParser.parseString(getResponse.body()).getAsJsonObject().get("description").getAsString();
+        }
+
+        EditBox descriptionField = new EditBox(this.font, (this.width / 2) - 180, 80, 360, 20, CommonComponents.EMPTY);
+        descriptionField.setValue(description);
+        descriptionField.setMaxLength(200);
 
         Button submitButton = Button.builder(Component.literal("Submit"), (btn) -> {
             try {
-                HttpClient client = HttpClient.newHttpClient();
-                HttpRequest request = HttpRequest.newBuilder()
+                HttpRequest post = HttpRequest.newBuilder()
                         .uri(URI.create("https://ratings.legiti.dev/review/" + uuid))
                         .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(String.format("{\"rating\":%s,\"description\":\"%s\",\"reviewer\":\"%s\"}", rating, description.getValue(), Minecraft.getInstance().getGameProfile().name())))
+                        .POST(HttpRequest.BodyPublishers.ofString(String.format("{\"rating\":%s,\"description\":\"%s\",\"reviewer\":\"%s\"}", rating, descriptionField.getValue(), Minecraft.getInstance().getGameProfile().name())))
                         .build();
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() == 201) {
+                HttpResponse<String> postResponse = client.send(post, HttpResponse.BodyHandlers.ofString());
+                if (postResponse.statusCode() == 201) {
                     Minecraft.getInstance().player.displayClientMessage(Component.literal("Successfully submitted rating").withStyle(ChatFormatting.GREEN), false);
-                } else if (response.statusCode() == 400) {
-                    Minecraft.getInstance().player.displayClientMessage(Component.literal("Failed to submit rating: world already reviewed").withStyle(ChatFormatting.RED), false);
+                } else if (postResponse.statusCode() == 400) {
+                    Minecraft.getInstance().player.displayClientMessage(Component.literal("Failed to submit rating").withStyle(ChatFormatting.RED), false);
                 }
                 this.onClose();
             } catch (Exception e) {
@@ -63,7 +84,7 @@ public class RateScreen extends Screen {
         }).bounds((this.width / 2) - 60, this.height - 40, 120, 20).build();
 
         this.addRenderableWidget(slider);
-        this.addRenderableWidget(description);
+        this.addRenderableWidget(descriptionField);
         this.addRenderableWidget(submitButton);
     }
 
