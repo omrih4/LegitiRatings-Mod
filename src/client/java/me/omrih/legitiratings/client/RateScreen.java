@@ -43,6 +43,7 @@ public class RateScreen extends Screen {
         };
 
         EditBox descriptionField = new EditBox(this.font, (this.width / 2) - 180, 80, 360, 20, CommonComponents.EMPTY);
+        descriptionField.setHint(Component.literal("Short description of the world"));
         descriptionField.setEditable(false);
         descriptionField.setMaxLength(200);
 
