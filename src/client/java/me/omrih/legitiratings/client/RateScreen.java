@@ -42,27 +42,28 @@ public class RateScreen extends Screen {
             }
         };
 
-        HttpResponse<String> getResponse = null;
+        EditBox descriptionField = new EditBox(this.font, (this.width / 2) - 180, 80, 360, 20, CommonComponents.EMPTY);
+        descriptionField.setEditable(false);
+        descriptionField.setMaxLength(200);
+
         HttpRequest get = HttpRequest.newBuilder()
                 .uri(URI.create("https://ratings.legiti.dev/review/" + uuid))
                 .header("Content-Type", "application/json")
                 .GET()
                 .build();
-        try {
-            getResponse = client.send(get, HttpResponse.BodyHandlers.ofString());
-        } catch (Exception e) {
-            LegitiratingsClient.LOGGER.error("Request failed", e);
-        }
-        String description;
-        if (getResponse == null || getResponse.statusCode() == 400) {
-            description = "";
-        } else {
-            description = JsonParser.parseString(getResponse.body()).getAsJsonObject().get("description").getAsString();
-        }
-
-        EditBox descriptionField = new EditBox(this.font, (this.width / 2) - 180, 80, 360, 20, CommonComponents.EMPTY);
-        descriptionField.setValue(description);
-        descriptionField.setMaxLength(200);
+        client.sendAsync(get, HttpResponse.BodyHandlers.ofString()).thenAccept(response -> {
+            if (response.statusCode() == 400) {
+                Minecraft.getInstance().execute(() -> {
+                    descriptionField.setValue("");
+                    descriptionField.setEditable(true);
+                });
+            } else {
+                Minecraft.getInstance().execute(() -> {
+                    descriptionField.setValue(JsonParser.parseString(response.body()).getAsJsonObject().get("description").getAsString());
+                    descriptionField.setEditable(true);
+                });
+            }
+        });
 
         Button submitButton = Button.builder(Component.literal("Submit"), (btn) -> {
             try {
