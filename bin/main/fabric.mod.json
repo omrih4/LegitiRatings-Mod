@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "legitiratings",
+  "version": "${version}",
+  "name": "LegitiRatings",
+  "description": "Rate and review Legitimoose worlds in-game!",
+  "authors": [
+    "Omri",
+    "olaf_294"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/legitiratings/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "me.omrih.legitiratings.client.LegitiratingsClient"
+    ],
+    "main": [
+      "me.omrih.legitiratings.Legitiratings"
+    ]
+  },
+  "mixins": [
+    "legitiratings.mixins.json",
+    {
+      "config": "legitiratings.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

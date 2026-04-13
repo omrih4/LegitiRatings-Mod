@@ -34,7 +34,7 @@ public class LegitiratingsClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-            dispatcher.register(ClientCommandManager.literal("rate").executes((context -> {
+            dispatcher.register(ClientCommandManager.literal("legitirate").executes((context -> {
                 getRateMessage = true;
                 Minecraft.getInstance().player.connection.sendCommand("uuid");
                 return 1;
