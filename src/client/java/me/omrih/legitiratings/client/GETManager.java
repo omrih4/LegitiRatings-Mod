@@ -1,7 +1,6 @@
 package me.omrih.legitiratings.client;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.net.URI;
@@ -32,18 +31,22 @@ public class GETManager {
     }
 
     public CompletableFuture<JsonArray> refreshCache() {
+        CompletableFuture<JsonArray> completableFuture = new CompletableFuture<>();
+
         HttpRequest get = HttpRequest.newBuilder()
                 .uri(URI.create("https://ratings.legiti.dev/review/"))
                 .header("Content-Type", "application/json")
                 .GET()
                 .build();
-        return httpClient.sendAsync(get, HttpResponse.BodyHandlers.ofString()).thenApply(response -> {
+        httpClient.sendAsync(get, HttpResponse.BodyHandlers.ofString()).thenAccept(response -> {
             if (response.statusCode() == 200) {
                 reviewsResponse = response.body();
                 lastFetched = System.currentTimeMillis();
             }
-            return JsonParser.parseString(reviewsResponse).getAsJsonArray();
+
+            completableFuture.complete(JsonParser.parseString(reviewsResponse).getAsJsonArray());
         });
+        return completableFuture;
     }
 
     public static GETManager getInstance() {
