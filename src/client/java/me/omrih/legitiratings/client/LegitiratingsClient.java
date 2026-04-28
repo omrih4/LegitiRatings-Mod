@@ -79,9 +79,17 @@ public class LegitiratingsClient implements ClientModInitializer {
                                         JsonObject worldObj = world.getAsJsonObject();
                                         if (Objects.equals(worldObj.get("uuid").getAsString(), uuid)) {
                                             String rating = worldObj.get("rating").getAsString();
+                                            String description = worldObj.get("description").getAsString();
                                             tagWithRating.putString("legitirating", rating);
                                             item.set(DataComponents.CUSTOM_DATA, CustomData.of(tagWithRating));
-                                            item.set(DataComponents.LORE, lore.withLineAdded(Component.literal(rating + "/10 ★").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD).withItalic(false))));
+                                            ItemLore newLore = lore
+                                                    .withLineAdded(
+                                                            Component.literal(rating + "/10 ★").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD).withItalic(false))
+                                                    )
+                                                    .withLineAdded(
+                                                            Component.literal(description).setStyle(Style.EMPTY.withColor(ChatFormatting.AQUA).withItalic(false))
+                                                    );
+                                            item.set(DataComponents.LORE, newLore);
                                         }
                                     }
                                 }));
