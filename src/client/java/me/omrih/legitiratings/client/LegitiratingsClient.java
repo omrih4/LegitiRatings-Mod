@@ -1,6 +1,7 @@
 package me.omrih.legitiratings.client;
 
-import com.google.gson.JsonParser;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -21,15 +22,11 @@ import net.minecraft.world.item.component.ItemLore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.util.Objects;
 
 public class LegitiratingsClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(LegitiratingsClient.class);
     public static boolean getRateMessage = false;
-    HttpClient httpClient = HttpClient.newHttpClient();
 
     @Override
     public void onInitializeClient() {
@@ -68,28 +65,26 @@ public class LegitiratingsClient implements ClientModInitializer {
                     } catch (NullPointerException ignored) {
                     }
                     if (tag != null) {
+                        // return if we have already checked this world
                         if (tag.getString("legitirating").isPresent()) return;
+
                         CompoundTag publicBukkitValues = (CompoundTag) tag.get("PublicBukkitValues");
                         if (publicBukkitValues != null) {
                             String uuid = publicBukkitValues.getString("datapackserverpaper:uuid").orElse(null);
                             if (uuid != null) {
                                 final ItemLore lore = item.get(DataComponents.LORE);
-                                HttpRequest get = HttpRequest.newBuilder()
-                                        .uri(URI.create("https://ratings.legiti.dev/review/" + uuid))
-                                        .header("Content-Type", "application/json")
-                                        .GET()
-                                        .build();
                                 CompoundTag tagWithRating = tag;
-                                httpClient.sendAsync(get, HttpResponse.BodyHandlers.ofString()).thenAccept(response -> {
-                                    if (response.statusCode() != 400) {
-                                        Minecraft.getInstance().execute(() -> {
-                                            String rating = JsonParser.parseString(response.body()).getAsJsonObject().get("rating").getAsString();
+                                GETManager.getInstance().get().thenAccept((ratings) -> Minecraft.getInstance().execute(() -> {
+                                    for (JsonElement world : ratings) {
+                                        JsonObject worldObj = world.getAsJsonObject();
+                                        if (Objects.equals(worldObj.get("uuid").getAsString(), uuid)) {
+                                            String rating = worldObj.get("rating").getAsString();
                                             tagWithRating.putString("legitirating", rating);
                                             item.set(DataComponents.CUSTOM_DATA, CustomData.of(tagWithRating));
                                             item.set(DataComponents.LORE, lore.withLineAdded(Component.literal(rating + "/10 ★").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD).withItalic(false))));
-                                        });
+                                        }
                                     }
-                                });
+                                }));
                             }
                         }
                     }

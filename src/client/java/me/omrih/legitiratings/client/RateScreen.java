@@ -76,9 +76,10 @@ public class RateScreen extends Screen {
                 HttpResponse<String> postResponse = client.send(post, HttpResponse.BodyHandlers.ofString());
                 if (postResponse.statusCode() == 201) {
                     Minecraft.getInstance().player.displayClientMessage(Component.literal("Successfully submitted rating").withStyle(ChatFormatting.GREEN), false);
-                } else if (postResponse.statusCode() == 400) {
+                } else {
                     Minecraft.getInstance().player.displayClientMessage(Component.literal("Failed to submit rating").withStyle(ChatFormatting.RED), false);
                 }
+                GETManager.getInstance().refreshCache().join();
                 this.onClose();
             } catch (Exception e) {
                 LegitiratingsClient.LOGGER.error("Request failed", e);
