@@ -47,6 +47,10 @@ public class RateScreen extends Screen {
         descriptionField.setEditable(false);
         descriptionField.setMaxLength(200);
 
+        EditBox reviewField = new EditBox(this.font, (this.width / 2) - 180, 120, 360, 20, CommonComponents.EMPTY);
+        reviewField.setHint(Component.literal("Your review of the world"));
+        reviewField.setMaxLength(200);
+
         HttpRequest get = HttpRequest.newBuilder()
                 .uri(URI.create("https://ratings.legiti.dev/review/" + uuid))
                 .header("Content-Type", "application/json")
@@ -71,7 +75,7 @@ public class RateScreen extends Screen {
                 HttpRequest post = HttpRequest.newBuilder()
                         .uri(URI.create("https://ratings.legiti.dev/review/" + uuid))
                         .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(String.format("{\"rating\":%s,\"description\":\"%s\",\"reviewer\":\"%s\"}", rating, descriptionField.getValue(), Minecraft.getInstance().getGameProfile().name())))
+                        .POST(HttpRequest.BodyPublishers.ofString(String.format("{\"rating\":%s,\"review\":\"%s\",\"description\":\"%s\",\"reviewer\":\"%s\"}", rating, reviewField.getValue(), descriptionField.getValue(), Minecraft.getInstance().getGameProfile().name())))
                         .build();
                 HttpResponse<String> postResponse = client.send(post, HttpResponse.BodyHandlers.ofString());
                 if (postResponse.statusCode() == 201) {
@@ -88,6 +92,7 @@ public class RateScreen extends Screen {
 
         this.addRenderableWidget(slider);
         this.addRenderableWidget(descriptionField);
+        this.addRenderableWidget(reviewField);
         this.addRenderableWidget(submitButton);
     }
 

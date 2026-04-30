@@ -1,5 +1,6 @@
 package me.omrih.legitiratings.client;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.fabricmc.api.ClientModInitializer;
@@ -74,21 +75,41 @@ public class LegitiratingsClient implements ClientModInitializer {
                             if (uuid != null) {
                                 final ItemLore lore = item.get(DataComponents.LORE);
                                 CompoundTag tagWithRating = tag;
-                                GETManager.getInstance().get().thenAccept((ratings) -> Minecraft.getInstance().execute(() -> {
-                                    for (JsonElement world : ratings) {
+                                GETManager.getInstance().get().thenAccept((worlds) -> Minecraft.getInstance().execute(() -> {
+                                    for (JsonElement world : worlds) {
                                         JsonObject worldObj = world.getAsJsonObject();
                                         if (Objects.equals(worldObj.get("uuid").getAsString(), uuid)) {
-                                            String rating = worldObj.get("rating").getAsString();
+                                            String avgRating = worldObj.get("rating").getAsString();
                                             String description = worldObj.get("description").getAsString();
-                                            tagWithRating.putString("legitirating", rating);
+                                            JsonArray reviews = worldObj.getAsJsonArray("ratings");
+
+                                            tagWithRating.putString("legitirating", avgRating);
                                             item.set(DataComponents.CUSTOM_DATA, CustomData.of(tagWithRating));
                                             ItemLore newLore = lore
                                                     .withLineAdded(
-                                                            Component.literal(rating + "/10 ★").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD).withItalic(false))
+                                                            Component.literal(avgRating + "/10 ★").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD).withItalic(false))
                                                     )
                                                     .withLineAdded(
                                                             Component.literal(description).setStyle(Style.EMPTY.withColor(ChatFormatting.AQUA).withItalic(false))
+                                                    )
+                                                    .withLineAdded(
+                                                            Component.literal("➡ Reviews").setStyle(Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(false))
                                                     );
+                                            for (JsonElement review : reviews) {
+                                                JsonObject reviewObj = review.getAsJsonObject();
+
+                                                String reviewer = reviewObj.get("reviewer").getAsString();
+                                                String rating = reviewObj.get("rating").getAsString();
+                                                String userReview = reviewObj.get("review").getAsString();
+
+                                                newLore = newLore
+                                                        .withLineAdded(
+                                                                Component.literal(reviewer + ' ').setStyle(Style.EMPTY.withColor(ChatFormatting.WHITE).withItalic(false))
+                                                                        .append(Component.literal(rating + "/10 ★").setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD).withItalic(false)))
+                                                                        .append(Component.literal(" - ").setStyle(Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(false)))
+                                                                        .append(userReview).setStyle(Style.EMPTY.withColor(ChatFormatting.AQUA).withItalic(false))
+                                                        );
+                                            }
                                             item.set(DataComponents.LORE, newLore);
                                         }
                                     }
